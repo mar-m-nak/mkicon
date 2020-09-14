@@ -1,17 +1,39 @@
 use load_file::load_bytes;
 use std::env;
+use std::io;
+use std::path::PathBuf;
 use tinybmp::{Bmp, Pixel};
 
+fn get_curdir() -> io::Result<PathBuf> {
+    let dir = env::current_dir()?;
+    // dir.pop();
+    // dir.push("Config");
+    // dir.push("test.txt");
+    Ok(dir)
+}
+
 fn read_bmp(path: &str) {
+    let curres = get_curdir().expect("カレントディレクトリを取得できませんでした");
+    let curdir: &str = &curres.display().to_string();
+
+    // path指定無ければカレントディレクトリ上を指定
+    let read_path: String = if path.contains(":") || path.contains("\\") || path.contains("/") {
+        path.to_string()
+    } else {
+        format!("{}\\{}", curdir, path)
+    };
+    println!("- file: {}", read_path);
+
     // 外部ファイル読み込み
-    let bmp = Bmp::from_slice(load_bytes!(path)).expect("Failed to parse BMP image");
+    let bmp = Bmp::from_slice(load_bytes!(&read_path)).expect("Failed to parse BMP image");
 
     // 画像サイズ, bpp, 総ピクセル数 でチェック
     assert_eq!(bmp.header.image_width, 16);
     assert_eq!(bmp.header.image_height, 16);
     assert_eq!(
         true,
-        bmp.header.bpp == 8 || bmp.header.bpp == 16 || bmp.header.bpp == 24 || bmp.header.bpp == 32
+        bmp.header.bpp == 8 || bmp.header.bpp == 16 || bmp.header.bpp == 24 || bmp.header.bpp == 32,
+        "対応していない色深度です"
     );
 
     // BMPのピクセル座標と色のイテレータを取得し vec に収集
@@ -29,8 +51,13 @@ fn read_bmp(path: &str) {
     //  bpp 16bit ... 32767
     //  bpp 24bit ... 16777215
     //  bpp 32bit ... 16777215
-    let lights_color =
-        if bmp.header.bpp == 16 {32767} else if bmp.header.bpp >= 24 {16777215} else {1};
+    let lights_color = if bmp.header.bpp == 16 {
+        32767
+    } else if bmp.header.bpp >= 24 {
+        16777215
+    } else {
+        1
+    };
 
     // 結果bitパターン格納配列
     let mut lights_patterns: [u16; 16] = [0; 16];
