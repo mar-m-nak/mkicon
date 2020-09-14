@@ -104,9 +104,10 @@ fn main() {
     const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 {
+        println!("");
         read_bmp(&args[1]);
     } else {
-        println!("{} {}", PKG_NAME, PKG_VERSION);
+        println!("\n{} {}", PKG_NAME, PKG_VERSION);
         println!("BMP ファイルから CatShanty2 のモノアイコンパターンを作成します.");
         println!("使い方：mkicon \"bmp file\"\n");
         println!("ドットパターンは 背景色, 全灯色, 中間色 と判定した３色で拾います.");
