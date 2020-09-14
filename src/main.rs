@@ -1,22 +1,22 @@
 use load_file::load_bytes;
 use std::env;
-use std::io;
-use std::path::PathBuf;
 use tinybmp::{Bmp, Pixel};
 
-fn get_curdir() -> io::Result<PathBuf> {
-    let dir = env::current_dir()?;
-    // dir.pop();
-    // dir.push("Config");
-    // dir.push("test.txt");
-    Ok(dir)
+/**
+ * カレントディレクトリを返す
+ */
+fn get_curdir() -> String {
+    let curres = env::current_dir().expect("カレントディレクトリ取得失敗");
+    return curres.display().to_string();
 }
 
+/**
+ * BMPファイルを読み込んで CatShanty2 のモノアイコン用bitパターンを表示する
+ */
 fn read_bmp(path: &str) {
-    let curres = get_curdir().expect("カレントディレクトリを取得できませんでした");
-    let curdir: &str = &curres.display().to_string();
 
     // path指定無ければカレントディレクトリ上を指定
+    let curdir = get_curdir();
     let read_path: String = if path.contains(":") || path.contains("\\") || path.contains("/") {
         path.to_string()
     } else {
@@ -25,11 +25,11 @@ fn read_bmp(path: &str) {
     println!("- file: {}", read_path);
 
     // 外部ファイル読み込み
-    let bmp = Bmp::from_slice(load_bytes!(&read_path)).expect("Failed to parse BMP image");
+    let bmp = Bmp::from_slice(load_bytes!(&read_path)).expect("BMPファイル展開失敗");
 
     // 画像サイズ, bpp, 総ピクセル数 でチェック
-    assert_eq!(bmp.header.image_width, 16);
-    assert_eq!(bmp.header.image_height, 16);
+    assert_eq!(bmp.header.image_width, 16, "規定外のサイズです");
+    assert_eq!(bmp.header.image_height, 16, "規定外のサイズです");
     assert_eq!(
         true,
         bmp.header.bpp == 8 || bmp.header.bpp == 16 || bmp.header.bpp == 24 || bmp.header.bpp == 32,
@@ -38,7 +38,7 @@ fn read_bmp(path: &str) {
 
     // BMPのピクセル座標と色のイテレータを取得し vec に収集
     let pixels: Vec<Pixel> = bmp.into_iter().collect();
-    assert_eq!(pixels.len(), 16 * 16);
+    assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
 
     println!(
         "- size : w {}, h {}",
