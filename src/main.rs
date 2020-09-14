@@ -28,8 +28,11 @@ fn read_bmp(path: &str) {
     let bmp = Bmp::from_slice(load_bytes!(&read_path)).expect("BMPファイル展開失敗");
 
     // 画像サイズ, bpp, 総ピクセル数 でチェック
-    assert_eq!(bmp.header.image_width, 16, "規定外のサイズです");
-    assert_eq!(bmp.header.image_height, 16, "規定外のサイズです");
+    assert_eq!(
+        true,
+        bmp.header.image_width == 16 || bmp.header.image_height == 16,
+        "規定外のサイズです"
+    );
     assert_eq!(
         true,
         bmp.header.bpp == 8 || bmp.header.bpp == 16 || bmp.header.bpp == 24 || bmp.header.bpp == 32,
