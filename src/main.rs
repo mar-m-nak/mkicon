@@ -22,7 +22,7 @@ fn read_bmp(path: &str) {
     } else {
         format!("{}\\{}", curdir, path)
     };
-    println!("- file: {}", read_path);
+    println!("読み込みファイル : \"{}\"", read_path);
 
     // 外部ファイル読み込み
     let bmp = Bmp::from_slice(load_bytes!(&read_path)).expect("BMPファイル展開失敗");
@@ -38,16 +38,12 @@ fn read_bmp(path: &str) {
         bmp.header.bpp == 8 || bmp.header.bpp == 16 || bmp.header.bpp == 24 || bmp.header.bpp == 32,
         "対応していない色深度です"
     );
+    println!("色深度 : {}bpp", bmp.header.bpp);
 
     // BMPのピクセル座標と色のイテレータを取得し vec に収集
     let pixels: Vec<Pixel> = bmp.into_iter().collect();
     assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
 
-    println!(
-        "- size : w {}, h {}",
-        bmp.header.image_width, bmp.header.image_height
-    );
-    println!("- bpp : {}", bmp.header.bpp);
 
     // 全灯色判定（パレット番号1 or 白 を全灯色bitと判定）
     //  bpp  8bit ... 1（パレット番号）
@@ -92,6 +88,7 @@ fn read_bmp(path: &str) {
     }
 
     // 結果表示
+    println!("\n---モノアイコンパターン ここから---------");
     for ptn in &lights_patterns {
         print!(" {}", format!("{:04X}", ptn));
     }
@@ -99,12 +96,15 @@ fn read_bmp(path: &str) {
     for ptn in &harf_patterns {
         print!(" {}", format!("{:04X}", ptn));
     }
+    println!("\n---モノアイコンパターン ここまで---------");
 }
 
 fn main() {
-    println!("BMP to monoicon pattern for CatShanty2");
     let args: Vec<String> = env::args().collect();
-    let path = &args[1];
-    println!("{:?}", path);
-    read_bmp(path);
+    if args.len() == 2 {
+        read_bmp(&args[1]);
+    } else {
+        println!("BMP ファイルから CatShanty2 のモノアイコンパターンを作成します.");
+        println!("使い方：mkicon \"bmp file\"");
+    }
 }
