@@ -100,11 +100,18 @@ fn read_bmp(path: &str) {
 }
 
 fn main() {
+    const PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
+    const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 {
         read_bmp(&args[1]);
     } else {
+        println!("{} {}", PKG_NAME, PKG_VERSION);
         println!("BMP ファイルから CatShanty2 のモノアイコンパターンを作成します.");
-        println!("使い方：mkicon \"bmp file\"");
+        println!("使い方：mkicon \"bmp file\"\n");
+        println!("ドットパターンは 背景色, 全灯色, 中間色 と判定した３色で拾います.");
+        println!("- 背景色: パレット番号 0 (8bpp) または 黒色 (16,24,32bpp) の bit");
+        println!("- 全灯色: パレット番号 1 (8bpp) または 白色 (16,24,32bpp) の bit");
+        println!("- 中間色: それ以外の bit");
     }
 }
