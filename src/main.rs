@@ -59,8 +59,8 @@ fn read_bmp(path: &str) {
     };
 
     // 結果bitパターン配列作成
-    let mut lights_patterns: [u16; 16] = [0; 16];
-    let mut harf_patterns: [u16; 16] = [0; 16];
+    let mut lights_ptns: [u16; 16] = [0; 16];
+    let mut harf_ptns: [u16; 16] = [0; 16];
     while pixels.len() > 0 {
         // １ピクセル取り出し：右下→左上座標
         //  パレット番号0 or 黒 はスキップする
@@ -73,19 +73,19 @@ fn read_bmp(path: &str) {
         let bitlfg: u16 = 1 << (15 - pixel.x);
         let py = pixel.y as usize;
         if pixel.color == lights_color {
-            lights_patterns[py] = lights_patterns[py] | bitlfg;
+            lights_ptns[py] |= bitlfg;
         } else {
-            harf_patterns[py] = harf_patterns[py] | bitlfg;
+            harf_ptns[py] |= bitlfg;
         }
     }
 
     // 結果表示
     println!("\n---モノアイコンパターン ここから---------");
-    for ptn in &lights_patterns {
+    for ptn in &lights_ptns {
         print!(" {}", format!("{:04X}", ptn));
     }
     println!("");
-    for ptn in &harf_patterns {
+    for ptn in &harf_ptns {
         print!(" {}", format!("{:04X}", ptn));
     }
     println!("\n---モノアイコンパターン ここまで---------");
