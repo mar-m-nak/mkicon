@@ -26,8 +26,6 @@ fn read_bmp(path: &str) {
 
     // 外部ファイル読み込み
     let bmp = Bmp::from_slice(load_bytes!(&read_path)).expect("BMPファイル展開失敗");
-
-    // 画像サイズ, bpp, 総ピクセル数 でチェック
     assert_eq!(
         true,
         bmp.header.image_width == 16 || bmp.header.image_height == 16,
@@ -44,7 +42,6 @@ fn read_bmp(path: &str) {
     let mut pixels: Vec<Pixel> = bmp.into_iter().collect();
     assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
 
-
     // 全灯色判定（パレット番号1 or 白 を全灯色bitと判定）
     //  bpp  8bit ... 1（パレット番号）
     //  bpp 16bit ... 32767
@@ -59,17 +56,15 @@ fn read_bmp(path: &str) {
     };
 
     // 結果bitパターン配列作成
+    // パレット番号0 or 黒 はスキップ、全灯色以外は中間色と判定
     let mut lights_ptns: [u16; 16] = [0; 16];
     let mut harf_ptns: [u16; 16] = [0; 16];
     while pixels.len() > 0 {
-        // １ピクセル取り出し：右下→左上
-        //  パレット番号0 or 黒 はスキップ
+        // １ピクセル取り出し：座標的には右下→左上に向かう
         let pixel = pixels.pop().unwrap();
         if pixel.color == 0 {
             continue;
         }
-        // 結果配列の該当bitをON
-        //  全灯色以外は中間色と判定
         let bitlfg: u16 = 1 << (15 - pixel.x);
         if pixel.color == lights_color {
             lights_ptns[pixel.y as usize] |= bitlfg;
