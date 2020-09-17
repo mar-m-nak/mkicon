@@ -62,20 +62,19 @@ fn read_bmp(path: &str) {
     let mut lights_ptns: [u16; 16] = [0; 16];
     let mut harf_ptns: [u16; 16] = [0; 16];
     while pixels.len() > 0 {
-        // １ピクセル取り出し：右下→左上座標
-        //  パレット番号0 or 黒 はスキップする
+        // １ピクセル取り出し：右下→左上
+        //  パレット番号0 or 黒 はスキップ
         let pixel = pixels.pop().unwrap();
         if pixel.color == 0 {
             continue;
         }
-        // 結果配列の該当bitを立てる
-        //  全灯色以外は中間色と判定する
+        // 結果配列の該当bitをON
+        //  全灯色以外は中間色と判定
         let bitlfg: u16 = 1 << (15 - pixel.x);
-        let py = pixel.y as usize;
         if pixel.color == lights_color {
-            lights_ptns[py] |= bitlfg;
+            lights_ptns[pixel.y as usize] |= bitlfg;
         } else {
-            harf_ptns[py] |= bitlfg;
+            harf_ptns[pixel.y as usize] |= bitlfg;
         }
     }
 
