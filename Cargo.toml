@@ -1,6 +1,6 @@
 [package]
 name = "mkicon"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["marm.nakamura <hey_kitarou@yahoo.co.jp>"]
 edition = "2018"
 

@@ -7,7 +7,7 @@ use tinybmp::{Bmp, Pixel};
  */
 fn get_curdir() -> String {
     let curres = env::current_dir().expect("カレントディレクトリ取得失敗");
-    return curres.display().to_string();
+    curres.display().to_string()
 }
 
 /**
@@ -41,7 +41,7 @@ fn read_bmp(path: &str) {
     println!("色深度 : {}bpp", bmp.header.bpp);
 
     // BMPのピクセル座標と色のイテレータを取得し vec に収集
-    let pixels: Vec<Pixel> = bmp.into_iter().collect();
+    let mut pixels: Vec<Pixel> = bmp.into_iter().collect();
     assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
 
 
@@ -58,33 +58,25 @@ fn read_bmp(path: &str) {
         1
     };
 
-    // 結果bitパターン格納配列
+    // 結果bitパターン配列作成
     let mut lights_patterns: [u16; 16] = [0; 16];
     let mut harf_patterns: [u16; 16] = [0; 16];
-
-    // 16 行
-    for py in (0..256).step_by(16) {
-        // 16 ピクセル分のbitパターンを作成する
+    while pixels.len() > 0 {
+        // １ピクセル取り出し：右下→左上座標
         //  パレット番号0 or 黒 はスキップする
-        //  全灯色以外は中間色と判定する
-        let mut lights_pttern: u16 = 0;
-        let mut harf_pattern: u16 = 0;
-        let mut pos: usize = 0;
-        for px in (0..16).rev() {
-            pos = py + px;
-            if pixels[pos].color == 0 {
-                continue;
-            }
-            let bitflg: u16 = 1 << (15 - px);
-            if pixels[pos].color == lights_color {
-                lights_pttern = lights_pttern | bitflg;
-            } else {
-                harf_pattern = harf_pattern | bitflg;
-            }
+        let pixel = pixels.pop().unwrap();
+        if pixel.color == 0 {
+            continue;
         }
-        // 結果配列へ格納
-        lights_patterns[pos / 16] = lights_pttern;
-        harf_patterns[pos / 16] = harf_pattern;
+        // 結果配列の該当bitを立てる
+        //  全灯色以外は中間色と判定する
+        let bitlfg: u16 = 1 << (15 - pixel.x);
+        let py = pixel.y as usize;
+        if pixel.color == lights_color {
+            lights_patterns[py] = lights_patterns[py] | bitlfg;
+        } else {
+            harf_patterns[py] = harf_patterns[py] | bitlfg;
+        }
     }
 
     // 結果表示
