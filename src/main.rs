@@ -6,6 +6,10 @@ struct MyBmpDatas {
     bpp: u16,
     pixels: Vec<Pixel>,
 }
+struct BitsPatterns {
+    lights: [u16; 16],
+    harf: [u16; 16],
+}
 
 
 /**
@@ -53,7 +57,7 @@ fn read_bmp(path: &str) -> MyBmpDatas {
 /**
  * bpp と ピクセルのベクタから、全灯色 と 中間色 のパターン配列を返す
  */
-fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> ([u16; 16], [u16; 16]) {
+fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> BitsPatterns {
     let bpp = bpp_and_pixels.bpp;
     let mut pixels = bpp_and_pixels.pixels;
 
@@ -81,20 +85,20 @@ fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> ([u16; 16], [u16; 16]) {
         }
     }
 
-    (lights_ptns, harf_ptns)
+    BitsPatterns {lights: lights_ptns, harf: harf_ptns}
 }
 
 /**
  * パターン配列の結果を表示する
  */
-fn disp_result(patterns: ([u16; 16], [u16; 16])) {
+fn disp_result(patterns: BitsPatterns) {
     // 結果表示
     println!("\n---モノアイコンパターン ここから---------");
-    for ptn in &patterns.0 {
+    for ptn in &patterns.lights {
         print!(" {}", format!("{:04X}", ptn));
     }
     println!("");
-    for ptn in &patterns.1 {
+    for ptn in &patterns.harf {
         print!(" {}", format!("{:04X}", ptn));
     }
     println!("\n---モノアイコンパターン ここまで---------");
@@ -141,7 +145,7 @@ mod tests {
         let pat_1: [u16; 16] = [
                 0x0000, 0x1000, 0x2400, 0x0200, 0x0100, 0x2480, 0x1240, 0x4920, 0x2490, 0x1248, 0x0920, 0x0480, 0x0204, 0x0108, 0x0000, 0x0000,
         ];
-        assert_eq!(patterns.0, pat_0, "\n全灯色パターン作成失敗!!\n\n");
-        assert_eq!(patterns.1, pat_1, "\n中間色パターン作成失敗!!\n\n");
+        assert_eq!(patterns.lights, pat_0, "\n全灯色パターン作成失敗!!\n\n");
+        assert_eq!(patterns.harf, pat_1, "\n中間色パターン作成失敗!!\n\n");
     }
 }
