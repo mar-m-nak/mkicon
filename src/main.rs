@@ -6,17 +6,10 @@ struct MyBmpDatas {
     bpp: u16,
     pixels: Vec<Pixel>,
 }
+#[derive(Default)]
 struct BitsPatterns {
     lights: [u16; 16],
     harf: [u16; 16],
-}
-impl Default for BitsPatterns {
-    fn default() -> BitsPatterns {
-        BitsPatterns {
-            lights: [0; 16],
-            harf: [0; 16],
-        }
-    }
 }
 
 
