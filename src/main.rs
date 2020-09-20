@@ -10,6 +10,14 @@ struct BitsPatterns {
     lights: [u16; 16],
     harf: [u16; 16],
 }
+impl Default for BitsPatterns {
+    fn default() -> BitsPatterns {
+        BitsPatterns {
+            lights: [0; 16],
+            harf: [0; 16],
+        }
+    }
+}
 
 
 /**
@@ -60,6 +68,7 @@ fn read_bmp(path: &str) -> MyBmpDatas {
 fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> BitsPatterns {
     let bpp = bpp_and_pixels.bpp;
     let mut pixels = bpp_and_pixels.pixels;
+    let mut ptns: BitsPatterns = Default::default();
 
     // 全灯色判定（パレット番号1 or 白 を全灯色bitと判定）
     //     8 bpp ... 0x1 (パレット番号)
@@ -69,8 +78,6 @@ fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> BitsPatterns {
 
     // 結果bitパターン配列作成
     // パレット番号0 or 黒 はスキップ、全灯色以外は中間色と判定
-    let mut lights_ptns: [u16; 16] = [0; 16];
-    let mut harf_ptns: [u16; 16] = [0; 16];
     while pixels.len() > 0 {
         // １ピクセル取り出し：座標的には右下→左上に向かう
         let pixel = pixels.pop().unwrap();
@@ -79,13 +86,13 @@ fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> BitsPatterns {
         }
         let bitlfg: u16 = 1 << (15 - pixel.x);
         if pixel.color == lights_color {
-            lights_ptns[pixel.y as usize] |= bitlfg;
+            ptns.lights[pixel.y as usize] |= bitlfg;
         } else {
-            harf_ptns[pixel.y as usize] |= bitlfg;
+            ptns.harf[pixel.y as usize] |= bitlfg;
         }
     }
 
-    BitsPatterns {lights: lights_ptns, harf: harf_ptns}
+    ptns
 }
 
 /**
