@@ -43,14 +43,13 @@ fn read_bmp(path: &str) {
     assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
 
     // 全灯色判定（パレット番号1 or 白 を全灯色bitと判定）
-    //  bpp  8bit ... 1（パレット番号）
-    //  bpp 16bit ... 32767
-    //  bpp 24bit ... 16777215
-    //  bpp 32bit ... 16777215
+    //     8 bpp ... 0x1 (パレット番号)
+    //    16 bpp ... 0x8000 (32767)
+    // 24/32 bpp ... 0xFF FFFF (16777215)
     let lights_color = if bmp.header.bpp == 16 {
-        32767
+        0x8000
     } else if bmp.header.bpp >= 24 {
-        16777215
+        0xFF_FFFF
     } else {
         1
     };
