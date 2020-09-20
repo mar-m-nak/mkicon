@@ -11,10 +11,9 @@ fn get_curdir() -> String {
 }
 
 /**
- * BMPファイルを読み込んで CatShanty2 のモノアイコン用bitパターンを表示する
+ * BMPファイルを読み込んで bpp と ピクセルのベクタを返す
  */
-fn read_bmp(path: &str) {
-
+fn read_bmp(path: &str) -> (u16, Vec<Pixel>) {
     // path指定無ければカレントディレクトリ上を指定
     let curdir = get_curdir();
     let read_path: String = if path.contains(":") || path.contains("\\") || path.contains("/") {
@@ -39,20 +38,24 @@ fn read_bmp(path: &str) {
     println!("色深度 : {}bpp", bmp.header.bpp);
 
     // BMPのピクセル座標と色のイテレータを取得し vec に収集
-    let mut pixels: Vec<Pixel> = bmp.into_iter().collect();
+    let pixels: Vec<Pixel> = bmp.into_iter().collect();
     assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
+
+    (bmp.header.bpp, pixels)
+}
+
+/**
+ * bpp と ピクセルのベクタから、全灯色 と 中間色 のパターン配列を返す
+ */
+fn make_bit_pattern(bpp_and_pixels: (u16, Vec<Pixel>)) -> ([u16; 16], [u16; 16]) {
+    let bpp = bpp_and_pixels.0;
+    let mut pixels = bpp_and_pixels.1;
 
     // 全灯色判定（パレット番号1 or 白 を全灯色bitと判定）
     //     8 bpp ... 0x1 (パレット番号)
     //    16 bpp ... 0x8000 (32767)
     // 24/32 bpp ... 0xFF FFFF (16777215)
-    let lights_color = if bmp.header.bpp == 16 {
-        0x8000
-    } else if bmp.header.bpp >= 24 {
-        0xFF_FFFF
-    } else {
-        1
-    };
+    let lights_color = if bpp == 16 {0x8000} else if bpp >= 24 {0xFF_FFFF} else {1};
 
     // 結果bitパターン配列作成
     // パレット番号0 or 黒 はスキップ、全灯色以外は中間色と判定
@@ -72,25 +75,37 @@ fn read_bmp(path: &str) {
         }
     }
 
+    (lights_ptns, harf_ptns)
+}
+
+/**
+ * パターン配列の結果を表示する
+ */
+fn disp_result(patterns: ([u16; 16], [u16; 16])) {
     // 結果表示
     println!("\n---モノアイコンパターン ここから---------");
-    for ptn in &lights_ptns {
+    for ptn in &patterns.0 {
         print!(" {}", format!("{:04X}", ptn));
     }
     println!("");
-    for ptn in &harf_ptns {
+    for ptn in &patterns.1 {
         print!(" {}", format!("{:04X}", ptn));
     }
     println!("\n---モノアイコンパターン ここまで---------");
 }
 
+/**
+ * BMPファイルを読み込んで CatShanty2 のモノアイコン用bitパターンを表示する
+ */
 fn main() {
     const PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
     const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 {
         println!("");
-        read_bmp(&args[1]);
+        let bpp_and_pixels = read_bmp(&args[1]);
+        let patterns = make_bit_pattern(bpp_and_pixels);
+        disp_result(patterns);
     } else {
         println!("\n{} {}", PKG_NAME, PKG_VERSION);
         println!("BMP ファイルから CatShanty2 のモノアイコンパターンを作成します.");
@@ -99,5 +114,17 @@ fn main() {
         println!("- 背景色: パレット番号 0 (8bpp) または 黒色 (16,24,32bpp) の bit");
         println!("- 全灯色: パレット番号 1 (8bpp) または 白色 (16,24,32bpp) の bit");
         println!("- 中間色: それ以外の bit");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::read_bmp;
+    use super::make_bit_pattern;
+
+    #[test]
+    fn make_clip_bmp_pattern() {
+        let bpp_and_pixels = read_bmp("../tests/ren_clip");
+        make_bit_pattern(bpp_and_pixels);
     }
 }
