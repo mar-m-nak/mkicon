@@ -2,6 +2,12 @@ use load_file::load_bytes;
 use std::env;
 use tinybmp::{Bmp, Pixel};
 
+struct MyBmpDatas {
+    bpp: u16,
+    pixels: Vec<Pixel>,
+}
+
+
 /**
  * カレントディレクトリを返す
  */
@@ -13,7 +19,7 @@ fn get_curdir() -> String {
 /**
  * BMPファイルを読み込んで bpp と ピクセルのベクタを返す
  */
-fn read_bmp(path: &str) -> (u16, Vec<Pixel>) {
+fn read_bmp(path: &str) -> MyBmpDatas {
     // path指定無ければカレントディレクトリ上を指定
     let curdir = get_curdir();
     let read_path: String = if path.contains(":") || path.contains("\\") || path.contains("/") {
@@ -41,15 +47,15 @@ fn read_bmp(path: &str) -> (u16, Vec<Pixel>) {
     let pixels: Vec<Pixel> = bmp.into_iter().collect();
     assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
 
-    (bmp.header.bpp, pixels)
+    MyBmpDatas {bpp: bmp.header.bpp, pixels}
 }
 
 /**
  * bpp と ピクセルのベクタから、全灯色 と 中間色 のパターン配列を返す
  */
-fn make_bit_pattern(bpp_and_pixels: (u16, Vec<Pixel>)) -> ([u16; 16], [u16; 16]) {
-    let bpp = bpp_and_pixels.0;
-    let mut pixels = bpp_and_pixels.1;
+fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> ([u16; 16], [u16; 16]) {
+    let bpp = bpp_and_pixels.bpp;
+    let mut pixels = bpp_and_pixels.pixels;
 
     // 全灯色判定（パレット番号1 or 白 を全灯色bitと判定）
     //     8 bpp ... 0x1 (パレット番号)
