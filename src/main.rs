@@ -122,9 +122,20 @@ mod tests {
     use super::read_bmp;
     use super::make_bit_pattern;
 
+    /**
+     * clip.bmp でパターン作成テスト
+     */
     #[test]
     fn make_clip_bmp_pattern() {
-        let bpp_and_pixels = read_bmp("../tests/ren_clip");
-        make_bit_pattern(bpp_and_pixels);
+        let bpp_and_pixels = read_bmp("../tests/ren_clip.bmp");
+        let patterns = make_bit_pattern(bpp_and_pixels);
+        let pat_0: [u16; 16] = [
+            0x0000, 0x0C00, 0x1200, 0x2100, 0x2480, 0x1240, 0x4920, 0x2490, 0x1248, 0x0924, 0x0494, 0x0264, 0x0108, 0x00F0, 0x0000, 0x0000,
+            ];
+        let pat_1: [u16; 16] = [
+                0x0000, 0x1000, 0x2400, 0x0200, 0x0100, 0x2480, 0x1240, 0x4920, 0x2490, 0x1248, 0x0920, 0x0480, 0x0204, 0x0108, 0x0000, 0x0000,
+        ];
+        assert_eq!(patterns.0, pat_0, "\n全灯色パターン作成失敗!!\n\n");
+        assert_eq!(patterns.1, pat_1, "\n中間色パターン作成失敗!!\n\n");
     }
 }
