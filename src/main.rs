@@ -31,17 +31,6 @@ struct BitsPatterns {
 
 
 ///
-/// # カレントディレクトリを返す #
-///
-/// #Panics
-/// - カレントディレクトリ取得失敗時にパニック
-///
-fn get_curdir() -> String {
-    let curres = env::current_dir().expect("カレントディレクトリ取得失敗");
-    curres.display().to_string()
-}
-
-///
 /// # BMPファイルから必要な情報を取り出す #
 ///
 /// BMPファイルを読み込んで [`bppとピクセルのベクタ情報`](struct.MyBmpDatas.html)を返す
@@ -53,17 +42,11 @@ fn get_curdir() -> String {
 /// - 取得したピクセル数が16x16と不一致
 ///
 fn read_bmp(path: &str) -> MyBmpDatas {
-    // path指定無ければカレントディレクトリ上を指定
-    let curdir = get_curdir();
-    let read_path: String = if path.contains(":") || path.contains("\\") || path.contains("/") {
-        path.to_string()
-    } else {
-        format!("{}\\{}", curdir, path)
-    };
-    println!("読み込みファイル : \"{}\"", read_path);
+
+    println!("読み込みファイル : \"{}\"", path);
 
     // 外部ファイル読み込み
-    let mut file = File::open(read_path).expect("ファイルが見つかりません");
+    let mut file = File::open(path).expect("ファイルが見つかりません");
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer).expect("バッファオーバーフロー");
     let bmp = Bmp::from_slice(&buffer).expect("BMPファイル展開失敗");
