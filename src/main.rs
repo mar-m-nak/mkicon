@@ -1,29 +1,56 @@
+//! mkicon
+//!
+//! BMP ファイルから CatShanty2 モノアイコン用パターンを生成して表示します
+#![warn(missing_docs)]
+
 use load_file::load_bytes;
 use std::env;
 use tinybmp::{Bmp, Pixel};
 
+///
+/// tinybmp から必要な情報を受け取る構造体
+///
 struct MyBmpDatas {
+    /// 色深度
     bpp: u16,
+    /// ピクセル配列
     pixels: Vec<Pixel>,
 }
+
+///
+/// モノアイコン用パターン構造体
+///
 #[derive(Default)]
 struct BitsPatterns {
+    /// 全灯色パターン
     lights: [u16; 16],
+    /// 中間色パターン
     harf: [u16; 16],
 }
 
 
-/**
- * カレントディレクトリを返す
- */
+///
+/// # カレントディレクトリを返す #
+///
+/// #Panics
+/// - カレントディレクトリ取得失敗時にパニック
+///
 fn get_curdir() -> String {
     let curres = env::current_dir().expect("カレントディレクトリ取得失敗");
     curres.display().to_string()
 }
 
-/**
- * BMPファイルを読み込んで bpp と ピクセルのベクタを返す
- */
+///
+/// # BMPファイルから必要な情報を取り出す #
+///
+/// BMPファイルを読み込んで [`bppとピクセルのベクタ情報`](struct.MyBmpDatas.html)を返す
+///
+/// #Panics
+/// - BMPファイルとして展開出来なかった場合
+/// - 16x16ピクセル以外
+/// - 8,16,24,32bpp 以外の色深度
+/// - 取得したピクセル数が16x16と不一致
+///
 fn read_bmp(path: &str) -> MyBmpDatas {
     // path指定無ければカレントディレクトリ上を指定
     let curdir = get_curdir();
@@ -55,9 +82,12 @@ fn read_bmp(path: &str) -> MyBmpDatas {
     MyBmpDatas {bpp: bmp.header.bpp, pixels}
 }
 
-/**
- * bpp と ピクセルのベクタから、全灯色 と 中間色 のパターン配列を返す
- */
+///
+/// # モノアイコン用パターンの作成 #
+///
+/// [`bppとピクセルのベクタ情報`](struct.MyBmpDatas.html)を元に、
+/// [`全灯色と中間色のパターン配列`](struct.BitsPatterns.html)を返す
+///
 fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> BitsPatterns {
     let bpp = bpp_and_pixels.bpp;
     let mut pixels = bpp_and_pixels.pixels;
@@ -88,9 +118,9 @@ fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> BitsPatterns {
     ptns
 }
 
-/**
- * パターン配列の結果を表示する
- */
+///
+/// # パターン配列の結果を表示する #
+///
 fn disp_result(patterns: BitsPatterns) {
     // 結果表示
     println!("\n---モノアイコンパターン ここから---------");
@@ -104,9 +134,11 @@ fn disp_result(patterns: BitsPatterns) {
     println!("\n---モノアイコンパターン ここまで---------");
 }
 
-/**
- * BMPファイルを読み込んで CatShanty2 のモノアイコン用bitパターンを表示する
- */
+///
+/// # BMPファイルを読み込んで CatShanty2 のモノアイコン用bitパターンを表示する #
+///
+/// コマンドライン引数で BMP ファイルパスを受け取る
+///
 fn main() {
     const PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
     const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -132,9 +164,9 @@ mod tests {
     use super::read_bmp;
     use super::make_bit_pattern;
 
-    /**
-     * clip.bmp でパターン作成テスト
-     */
+    ///
+    /// clip.bmp でパターン作成テスト
+    ///
     #[test]
     fn make_clip_bmp_pattern() {
         let bpp_and_pixels = read_bmp("../tests/ren_clip.bmp");
