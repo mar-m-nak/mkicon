@@ -8,4 +8,3 @@ edition = "2018"
 
 [dependencies]
 tinybmp = "0.2.3"
-load_file = "1.0.0"
