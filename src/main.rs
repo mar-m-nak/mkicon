@@ -22,7 +22,7 @@ impl MyBmpDatas {
     ///
     /// BMPファイルから必要な情報を取り出す
     ///
-    /// BMPファイルを読み込んで [`bppとピクセルのベクタ情報`](struct.MyBmpDatas.html)を返す
+    /// BMPファイルを読み込んで [bppとピクセルのベクタ情報](struct.MyBmpDatas.html)を返す
     ///
     /// #Panics
     /// - BMPファイルとして展開出来なかった場合
@@ -55,7 +55,6 @@ impl MyBmpDatas {
     }
 }
 
-
 ///
 /// モノアイコン用パターン構造体
 ///
@@ -67,56 +66,55 @@ struct BitsPatterns {
     harf: [u16; 16],
 }
 
-///
-/// # モノアイコン用パターンの作成 #
-///
-/// [`bppとピクセルのベクタ情報`](struct.MyBmpDatas.html)を元に、
-/// [`全灯色と中間色のパターン配列`](struct.BitsPatterns.html)を返す
-///
-fn make_bit_pattern(bpp_and_pixels: MyBmpDatas) -> BitsPatterns {
-    let bpp = bpp_and_pixels.bpp;
-    let mut pixels = bpp_and_pixels.pixels;
-    let mut ptns: BitsPatterns = Default::default();
-
-    // 全灯色判定（パレット番号1 or 白 を全灯色bitと判定）
-    //     8 bpp ... 0x1 (パレット番号)
-    //    16 bpp ... 0x8000 (32767)
-    // 24/32 bpp ... 0xFF FFFF (16777215)
-    let lights_color = if bpp == 16 {0x8000} else if bpp >= 24 {0xFF_FFFF} else {1};
-
-    // 結果bitパターン配列作成
-    // パレット番号0 or 黒 はスキップ、全灯色以外は中間色と判定
-    while pixels.len() > 0 {
-        // １ピクセル取り出し：座標的には右下→左上に向かう
-        let pixel = pixels.pop().unwrap();
-        if pixel.color == 0 {
-            continue;
+impl BitsPatterns {
+    ///
+    /// モノアイコン用パターンの作成
+    ///
+    /// [bppとピクセルのベクタ情報](struct.MyBmpDatas.html)を元に、
+    /// [全灯色と中間色のパターン配列](struct.BitsPatterns.html)を返す
+    ///
+    /// 全灯色判定（パレット番号1 or 白 を全灯色bitと判定）
+    /// -     8 bpp ... 0x1 (パレット番号)
+    /// -    16 bpp ... 0x8000 (32767)
+    /// - 24/32 bpp ... 0xFF FFFF (16777215)
+    ///
+    fn make (bpp_and_pixels: MyBmpDatas) -> Self {
+        let bpp = bpp_and_pixels.bpp;
+        let mut pixels = bpp_and_pixels.pixels;
+        let mut ptns: Self = Default::default();
+        // 結果bitパターン配列作成
+        // パレット番号0 or 黒 はスキップ、全灯色以外は中間色と判定
+        let lights_color = if bpp == 16 {0x8000} else if bpp >= 24 {0xFF_FFFF} else {1};
+        while pixels.len() > 0 {
+            // １ピクセル取り出し：座標的には右下→左上に向かう
+            let pixel = pixels.pop().unwrap();
+            if pixel.color == 0 {
+                continue;
+            }
+            let bitlfg: u16 = 1 << (15 - pixel.x);
+            if pixel.color == lights_color {
+                ptns.lights[pixel.y as usize] |= bitlfg;
+            } else {
+                ptns.harf[pixel.y as usize] |= bitlfg;
+            }
         }
-        let bitlfg: u16 = 1 << (15 - pixel.x);
-        if pixel.color == lights_color {
-            ptns.lights[pixel.y as usize] |= bitlfg;
-        } else {
-            ptns.harf[pixel.y as usize] |= bitlfg;
+        ptns
+    }
+
+    ///
+    /// パターン配列の結果を表示する
+    ///
+    fn disp (self: Self) {
+        println!("\n---モノアイコンパターン ここから---------");
+        for ptn in &self.lights {
+            print!(" {}", format!("{:04X}", ptn));
         }
+        println!("");
+        for ptn in &self.harf {
+            print!(" {}", format!("{:04X}", ptn));
+        }
+        println!("\n---モノアイコンパターン ここまで---------");
     }
-
-    ptns
-}
-
-///
-/// # パターン配列の結果を表示する #
-///
-fn disp_result(patterns: BitsPatterns) {
-    // 結果表示
-    println!("\n---モノアイコンパターン ここから---------");
-    for ptn in &patterns.lights {
-        print!(" {}", format!("{:04X}", ptn));
-    }
-    println!("");
-    for ptn in &patterns.harf {
-        print!(" {}", format!("{:04X}", ptn));
-    }
-    println!("\n---モノアイコンパターン ここまで---------");
 }
 
 ///
@@ -131,8 +129,7 @@ fn main() {
     if args.len() == 2 {
         println!("");
         let bpp_and_pixels = MyBmpDatas::load(&args[1]);
-        let patterns = make_bit_pattern(bpp_and_pixels);
-        disp_result(patterns);
+        BitsPatterns::make(bpp_and_pixels).disp();
     } else {
         println!("\n{} {}", PKG_NAME, PKG_VERSION);
         println!("BMP ファイルから CatShanty2 のモノアイコンパターンを作成します.");
@@ -147,7 +144,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::MyBmpDatas;
-    use super::make_bit_pattern;
+    use super::BitsPatterns;
 
     ///
     /// clip.bmp でパターン作成テスト
@@ -155,7 +152,7 @@ mod tests {
     #[test]
     fn make_clip_bmp_pattern() {
         let bpp_and_pixels = MyBmpDatas::load("./tests/ren_clip.bmp");
-        let patterns = make_bit_pattern(bpp_and_pixels);
+        let patterns = BitsPatterns::make(bpp_and_pixels);
         let pat_0: [u16; 16] = [
             0x0000, 0x0C00, 0x1200, 0x2100, 0x2480, 0x1240, 0x4920, 0x2490, 0x1248, 0x0924, 0x0494, 0x0264, 0x0108, 0x00F0, 0x0000, 0x0000,
             ];
