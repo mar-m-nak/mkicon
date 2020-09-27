@@ -18,6 +18,44 @@ struct MyBmpDatas {
     pixels: Vec<Pixel>,
 }
 
+impl MyBmpDatas {
+    ///
+    /// BMPファイルから必要な情報を取り出す
+    ///
+    /// BMPファイルを読み込んで [`bppとピクセルのベクタ情報`](struct.MyBmpDatas.html)を返す
+    ///
+    /// #Panics
+    /// - BMPファイルとして展開出来なかった場合
+    /// - 16x16ピクセル以外
+    /// - 8,16,24,32bpp 以外の色深度
+    /// - 取得したピクセル数が16x16と不一致
+    ///
+    fn load(path: &str) -> Self {
+        println!("読み込みファイル : \"{}\"", path);
+        // 外部ファイル読み込み
+        let mut file = File::open(path).unwrap();
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer).expect("バッファオーバーフロー");
+        let bmp = Bmp::from_slice(&buffer).expect("BMPファイル展開失敗");
+        assert_eq!(
+            true,
+            bmp.header.image_width == 16 || bmp.header.image_height == 16,
+            "規定外のサイズです"
+        );
+        assert_eq!(
+            true,
+            bmp.header.bpp == 8 || bmp.header.bpp == 16 || bmp.header.bpp == 24 || bmp.header.bpp == 32,
+            "対応していない色深度です"
+        );
+        println!("色深度 : {}bpp", bmp.header.bpp);
+        // BMPのピクセル座標と色のイテレータを取得し vec に収集
+        let pixels: Vec<Pixel> = bmp.into_iter().collect();
+        assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
+        Self {bpp: bmp.header.bpp, pixels}
+    }
+}
+
+
 ///
 /// モノアイコン用パターン構造体
 ///
@@ -27,46 +65,6 @@ struct BitsPatterns {
     lights: [u16; 16],
     /// 中間色パターン
     harf: [u16; 16],
-}
-
-
-///
-/// # BMPファイルから必要な情報を取り出す #
-///
-/// BMPファイルを読み込んで [`bppとピクセルのベクタ情報`](struct.MyBmpDatas.html)を返す
-///
-/// #Panics
-/// - BMPファイルとして展開出来なかった場合
-/// - 16x16ピクセル以外
-/// - 8,16,24,32bpp 以外の色深度
-/// - 取得したピクセル数が16x16と不一致
-///
-fn read_bmp(path: &str) -> MyBmpDatas {
-
-    println!("読み込みファイル : \"{}\"", path);
-
-    // 外部ファイル読み込み
-    let mut file = File::open(path).expect("ファイルが見つかりません");
-    let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer).expect("バッファオーバーフロー");
-    let bmp = Bmp::from_slice(&buffer).expect("BMPファイル展開失敗");
-    assert_eq!(
-        true,
-        bmp.header.image_width == 16 || bmp.header.image_height == 16,
-        "規定外のサイズです"
-    );
-    assert_eq!(
-        true,
-        bmp.header.bpp == 8 || bmp.header.bpp == 16 || bmp.header.bpp == 24 || bmp.header.bpp == 32,
-        "対応していない色深度です"
-    );
-    println!("色深度 : {}bpp", bmp.header.bpp);
-
-    // BMPのピクセル座標と色のイテレータを取得し vec に収集
-    let pixels: Vec<Pixel> = bmp.into_iter().collect();
-    assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
-
-    MyBmpDatas {bpp: bmp.header.bpp, pixels}
 }
 
 ///
@@ -132,7 +130,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 {
         println!("");
-        let bpp_and_pixels = read_bmp(&args[1]);
+        let bpp_and_pixels = MyBmpDatas::load(&args[1]);
         let patterns = make_bit_pattern(bpp_and_pixels);
         disp_result(patterns);
     } else {
@@ -148,7 +146,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::read_bmp;
+    use super::MyBmpDatas;
     use super::make_bit_pattern;
 
     ///
@@ -156,7 +154,7 @@ mod tests {
     ///
     #[test]
     fn make_clip_bmp_pattern() {
-        let bpp_and_pixels = read_bmp("./tests/ren_clip.bmp");
+        let bpp_and_pixels = MyBmpDatas::load("./tests/ren_clip.bmp");
         let patterns = make_bit_pattern(bpp_and_pixels);
         let pat_0: [u16; 16] = [
             0x0000, 0x0C00, 0x1200, 0x2100, 0x2480, 0x1240, 0x4920, 0x2490, 0x1248, 0x0924, 0x0494, 0x0264, 0x0108, 0x00F0, 0x0000, 0x0000,
