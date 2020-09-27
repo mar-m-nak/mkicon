@@ -3,7 +3,7 @@
 //! BMP ファイルから CatShanty2 モノアイコン用パターンを生成して表示します
 #![warn(missing_docs)]
 
-use std::fs::File;
+use std::{fs::File, process};
 use std::io::Read;
 use std::env;
 use tinybmp::{Bmp, Pixel};
@@ -30,28 +30,35 @@ impl MyBmpDatas {
     /// - 8,16,24,32bpp 以外の色深度
     /// - 取得したピクセル数が16x16と不一致
     ///
-    fn load(path: &str) -> Self {
-        println!("読み込みファイル : \"{}\"", path);
+    fn load(path: &str) -> Result<Self, String> {
         // 外部ファイル読み込み
-        let mut file = File::open(path).unwrap();
+        println!("読み込みファイル : \"{}\"", path);
+        let mut file = match File::open(path) {
+            Ok(file) => file,
+            Err(_) => return Err(String::from("ファイルが開けません")),
+        };
         let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).expect("バッファオーバーフロー");
-        let bmp = Bmp::from_slice(&buffer).expect("BMPファイル展開失敗");
-        assert_eq!(
-            true,
-            bmp.header.image_width == 16 || bmp.header.image_height == 16,
-            "規定外のサイズです"
-        );
-        assert_eq!(
-            true,
-            bmp.header.bpp == 8 || bmp.header.bpp == 16 || bmp.header.bpp == 24 || bmp.header.bpp == 32,
-            "対応していない色深度です"
-        );
-        println!("色深度 : {}bpp", bmp.header.bpp);
+        if file.read_to_end(&mut buffer).is_err() {
+            return Err(String::from("バッファオーバーフロー"));
+        };
+        let bmp = match Bmp::from_slice(&buffer) {
+            Ok(bmp) => bmp,
+            Err(_) => return Err(String::from("BMPファイル展開失敗")),
+        };
+        println!("ピクセルサイズ : {} x {}", bmp.header.image_width, bmp.header.image_height);
+        if bmp.header.image_width != 16 || bmp.header.image_height != 16 {
+            return Err(String::from("対応していないピクセルサイズです(16x16固定)"));
+        }
+        println!("色深度 : {} bpp", bmp.header.bpp);
+        if bmp.header.bpp != 8 && bmp.header.bpp != 16 && bmp.header.bpp != 24 && bmp.header.bpp != 32 {
+            return Err(String::from("対応していない色深度です"));
+        }
         // BMPのピクセル座標と色のイテレータを取得し vec に収集
         let pixels: Vec<Pixel> = bmp.into_iter().collect();
-        assert_eq!(pixels.len(), 16 * 16, "ピクセル取得失敗");
-        Self {bpp: bmp.header.bpp, pixels}
+        if pixels.len() != 16 * 16 {
+            return Err(String::from("ピクセル情報取得失敗"));
+        }
+        Ok(Self {bpp: bmp.header.bpp, pixels})
     }
 }
 
@@ -128,8 +135,15 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 {
         println!("");
+        // BMP読み込み
         let bpp_and_pixels = MyBmpDatas::load(&args[1]);
-        BitsPatterns::make(bpp_and_pixels).disp();
+        if bpp_and_pixels.is_err() {
+            // 読み込みエラー
+            println!("!!! エラー !!! {}", bpp_and_pixels.err().unwrap());
+            process::exit(1);
+        }
+        // パターン表示
+        BitsPatterns::make(bpp_and_pixels.unwrap()).disp();
     } else {
         println!("\n{} {}", PKG_NAME, PKG_VERSION);
         println!("BMP ファイルから CatShanty2 のモノアイコンパターンを作成します.");
@@ -152,7 +166,7 @@ mod tests {
     #[test]
     fn make_clip_bmp_pattern() {
         let bpp_and_pixels = MyBmpDatas::load("./tests/ren_clip.bmp");
-        let patterns = BitsPatterns::make(bpp_and_pixels);
+        let patterns = BitsPatterns::make(bpp_and_pixels.unwrap());
         let pat_0: [u16; 16] = [
             0x0000, 0x0C00, 0x1200, 0x2100, 0x2480, 0x1240, 0x4920, 0x2490, 0x1248, 0x0924, 0x0494, 0x0264, 0x0108, 0x00F0, 0x0000, 0x0000,
             ];
