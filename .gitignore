@@ -1,6 +1,4 @@
 /target
-/tests/chessboard*.bmp
-/tests/os-24.bmp
-/tests/test*.bmp
-/tests/win*.bmp
+/tests/
+!/tests/ren-clip.exe
 Cargo.lock
