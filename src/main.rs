@@ -3,9 +3,12 @@
 //! BMP ファイルから CatShanty2 モノアイコン用パターンを生成して表示します
 #![warn(missing_docs)]
 
-use std::{fs::File, process};
+use std::{fs::File};
 use std::io::Read;
 use std::env;
+
+// tinybmp を Apache ライセンス 2.0 で使用します
+// https://crates.io/crates/tinybmp
 use tinybmp::{Bmp, Pixel};
 
 ///
@@ -138,9 +141,8 @@ fn main() {
         // BMP読み込み
         let bpp_and_pixels = MyBmpDatas::load(&args[1]);
         if bpp_and_pixels.is_err() {
-            // 読み込みエラー
-            println!("!!! エラー !!! {}", bpp_and_pixels.err().unwrap());
-            process::exit(1);
+            println!("読み込みエラー：{}", bpp_and_pixels.err().unwrap());
+            return ();
         }
         // パターン表示
         BitsPatterns::make(bpp_and_pixels.unwrap()).disp();
@@ -160,11 +162,8 @@ mod tests {
     use super::MyBmpDatas;
     use super::BitsPatterns;
 
-    ///
-    /// clip.bmp でパターン作成テスト
-    ///
     #[test]
-    fn make_clip_bmp_pattern() {
+    fn test_make_pattern() {
         let bpp_and_pixels = MyBmpDatas::load("./tests/ren_clip.bmp");
         let patterns = BitsPatterns::make(bpp_and_pixels.unwrap());
         let pat_0: [u16; 16] = [

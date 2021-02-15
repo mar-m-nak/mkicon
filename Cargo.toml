@@ -1,8 +1,10 @@
 [package]
 name = "mkicon"
-version = "0.1.2"
-authors = ["marm.nakamura <hey_kitarou@yahoo.co.jp>"]
+version = "0.1.3"
+authors = ["marm.nakamura"]
 edition = "2018"
+description = "BMP ファイルから CatShanty2 モノアイコン用パターンを生成して表示します"
+license = "Unlicense"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
