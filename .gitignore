@@ -3,3 +3,4 @@
 /tests/os-24.bmp
 /tests/test*.bmp
 /tests/win*.bmp
+Cargo.lock
